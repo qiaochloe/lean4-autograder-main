@@ -1,5 +1,4 @@
 import Lean
-
 open Lean Lean.Elab.Tactic
 
 -- Main autograder attributes
@@ -40,22 +39,22 @@ initialize autogradedDefAttr : ParametricAttribute Float ←
 syntax:50 (name := valid_tactics) "validTactics" "#[" sepBy(tactic, ",") "]" : attr
 syntax:50 (name := default_tactics) "defaultTactics" "#[" sepBy(tactic, ",") "]" : attr
 
-initialize validTacticsAttr : ParametricAttribute (Array (String × TacticM Unit)) ← 
+initialize validTacticsAttr : ParametricAttribute (Array (String × Syntax)) ← 
   registerParametricAttribute {
     name := `valid_tactics
     descr := "Specifies the tactics run to validate a solution"
     getParam := λ _ stx => 
       match stx with
-        | `(attr| validTactics #[$tacs,*]) =>
+        | `(attr| validTactics #[$tacs,*]) => 
           return tacs.getElems.map fun tac => (
             tac.raw.prettyPrint.pretty.trim,
-            do evalTactic tac.raw)
+            tac.raw)
         | _ => throwError "Invalid valid tactic attribute"
     afterSet := λ _ _ => do pure ()
   }
 
 -- We expect this to be an attribute that is set up over the config definition
-initialize defaultTacticsAttr : ParametricAttribute (Array (String × TacticM Unit)) ← 
+initialize defaultTacticsAttr : ParametricAttribute (Array (String × Syntax)) ← 
   registerParametricAttribute {
     name := `default_tactics
     descr := "Specifies the default tactics run to validate a solution"
@@ -64,7 +63,7 @@ initialize defaultTacticsAttr : ParametricAttribute (Array (String × TacticM Un
         | `(attr| defaultTactics #[$tacs,*]) =>
           return tacs.getElems.map fun tac => (
             tac.raw.prettyPrint.pretty.trim,
-            do evalTactic tac.raw)
+            tac.raw)
         | _ => throwError "Invalid default tactic attribute"
     afterSet := λ _ _ => do pure ()
   }
